@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>
+			Django USDA Search Demo
+		</title>
+		<link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css" rel="stylesheet">
+		<style>
+.modal-backdrop {
+				position: fixed;
+			}
+		</style>
+		<script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+		<script src="//cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+		<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
+		<script type="text/javascript">
+			$("document").ready(function(){
+				$("#searchForm").submit(function(e){
+					e.preventDefault();
+					search($("#search").val())
+				});
+			});
+			function search(term) {
+				$.ajax({
+					url : "/foods/?search=" + term,
+					complete : function(response) {
+						$("#results").empty();
+						$.each(response.responseJSON.results, function(key, value){
+							$result = $("<a/>", {
+								href: "#",
+								class: "list-group-item",
+								html: value.long_description + "<span class='badge'>#" + value.id + "<\/span>"
+							}).data("food-id", value.id);
+							$result.click(function(e){
+								e.preventDefault();
+								getNutrients(this);
+							});
+							$("#results").append($result)
+						});
+					}
+				});
+			}
+
+			function getNutrients(that) {
+				$.ajax({
+					url : "/foodinfo/?id=" + $(that).data("food-id"),
+					complete : function(response) {
+						console.log(response);
+						$("#nutrientTitle").text($(that).text());
+						$("#nutrientModal table tbody").empty();
+						$.each(response.responseJSON.results[0].nutrientdata_set, function(key, row){
+							console.log(row['nutrient']['order']);
+							$("<tr/>")
+							.append(getCell(row['nutrient']['name']))
+							.append(getCell(row['ounce']))
+							.append(getCell(row['nutrient']['units']))
+							.append(getCell(row['last_modified']))
+							.appendTo(
+								$("#table" + getNutrientCategory(row['nutrient']['order']) + " tbody")
+							)
+						});
+						$("#nutrientModal").modal();
+					}
+				});
+			}
+
+			function getCell(cellText) {
+				return $("<td/>", {
+					text: cellText
+				});
+			}
+
+			var nutrientCategories = {
+				"Proximates"    : {
+					"startingOrder" : 0,
+					"endingOrder" : 1900
+				},
+				"Minerals"      : {
+					"startingOrder" : 2000,
+					"endingOrder" : 6200
+				},
+				"Vitamins"      : {
+					"startingOrder" : 6300,
+					"endingOrder" : 9000
+				},
+				"Lipids"        : {
+					"startingOrder" : 9000,
+					"endingOrder" : 15000
+				},
+				"AminoAcids"    : {
+					"startingOrder" : 15100,
+					"endingOrder" : 20000
+				}
+			}
+
+			function getNutrientCategory(order) {
+				var category = "Other";
+				$.each(nutrientCategories, function(name, value){
+					if(order >= value.startingOrder && order <= value.endingOrder) {
+						category = name;
+						return false;
+					}
+				});
+				return category;
+			}
+		</script>
+	</head>
+	<body>
+		<div class="container">
+			<nav class="navbar navbar-default">
+				<div class="container-fluid">
+					<div class="navbar-header">
+						<button class="navbar-toggle collapsed" data-target="#bs-example-navbar-collapse-1" data-toggle="collapse" type="button"><span class="sr-only">Toggle navigation</span> <span class="icon-bar"></span> <span class="icon-bar"></span> <span class="icon-bar"></span></button> <a class="navbar-brand" href="#">Django USDA Demo</a>
+					</div>
+					<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+						<form class="navbar-form navbar-left" id="searchForm" name="searchForm">
+							{% csrf_token %}
+							<div class="form-group">
+								<input class="form-control" id="search" placeholder="Search" type="text">
+							</div><button class="btn btn-default" type="submit">Submit</button>
+						</form>
+					</div>
+				</div>
+			</nav>
+			<div class="list-group" id="results"></div>
+		</div>
+		<div class="modal fade" id="nutrientModal">
+			<div class="modal-dialog modal-lg">
+				<div class="modal-content">
+					<div class="modal-header">
+						<button class="close" data-dismiss="modal" type="button"><span>&times;</span><span class="sr-only">Close</span></button>
+						<h4 class="modal-title" id="nutrientTitle"></h4>
+					</div>
+					<div class="modal-body">
+						<div class="panel-group" id="accordion">
+							<div class="panel panel-default">
+								<div class="panel-heading" id="headingOne">
+									<h4 class="panel-title">
+										<a data-parent="#accordion" data-toggle="collapse" href="#collapseOne">Proximates</a>
+									</h4>
+								</div>
+								<div class="panel-collapse collapse in" id="collapseOne">
+									<div class="panel-body">
+										<table class="table table-striped table-bordered" id="tableProximates">
+											<thead>
+												<tr>
+													<th>
+														Name
+													</th>
+													<th>
+														Amount Per 100 g
+													</th>
+													<th>
+														Units
+													</th>
+													<th>
+														Last Modified
+													</th>
+												</tr>
+											</thead>
+											<tbody></tbody>
+										</table>
+									</div>
+								</div>
+							</div>
+							<div class="panel panel-default">
+								<div class="panel-heading" id="headingTwo">
+									<h4 class="panel-title">
+										<a class="collapsed" data-parent="#accordion" data-toggle="collapse" href="#collapseTwo">Minerals</a>
+									</h4>
+								</div>
+								<div class="panel-collapse collapse" id="collapseTwo">
+									<div class="panel-body">
+										<table class="table table-striped table-bordered" id="tableMinerals">
+											<thead>
+												<tr>
+													<th>
+														Name
+													</th>
+													<th>
+														Amount Per 100 g
+													</th>
+													<th>
+														Units
+													</th>
+													<th>
+														Last Modified
+													</th>
+												</tr>
+											</thead>
+											<tbody></tbody>
+										</table>
+									</div>
+								</div>
+							</div>
+							<div class="panel panel-default">
+								<div class="panel-heading" id="headingThree">
+									<h4 class="panel-title">
+										<a class="collapsed" data-parent="#accordion" data-toggle="collapse" href="#collapseThree">Vitamins</a>
+									</h4>
+								</div>
+								<div class="panel-collapse collapse" id="collapseThree">
+									<div class="panel-body">
+										<table class="table table-striped table-bordered" id="tableVitamins">
+											<thead>
+												<tr>
+													<th>
+														Name
+													</th>
+													<th>
+														Amount Per 100 g
+													</th>
+													<th>
+														Units
+													</th>
+													<th>
+														Last Modified
+													</th>
+												</tr>
+											</thead>
+											<tbody></tbody>
+										</table>
+									</div>
+								</div>
+							</div>
+							<div class="panel panel-default">
+								<div class="panel-heading" id="headingFour">
+									<h4 class="panel-title">
+										<a class="collapsed" data-parent="#accordion" data-toggle="collapse" href="#collapseFour">Lipids</a>
+									</h4>
+								</div>
+								<div class="panel-collapse collapse" id="collapseFour">
+									<div class="panel-body">
+										<table class="table table-striped table-bordered" id="tableLipids">
+											<thead>
+												<tr>
+													<th>
+														Name
+													</th>
+													<th>
+														Amount Per 100 g
+													</th>
+													<th>
+														Units
+													</th>
+													<th>
+														Last Modified
+													</th>
+												</tr>
+											</thead>
+											<tbody></tbody>
+										</table>
+									</div>
+								</div>
+							</div>
+							<div class="panel panel-default">
+								<div class="panel-heading" id="headingFive">
+									<h4 class="panel-title">
+										<a class="collapsed" data-parent="#accordion" data-toggle="collapse" href="#collapseFive">Amino Acids</a>
+									</h4>
+								</div>
+								<div class="panel-collapse collapse" id="collapseFive">
+									<div class="panel-body">
+										<table class="table table-striped table-bordered" id="tableAminoAcids">
+											<thead>
+												<tr>
+													<th>
+														Name
+													</th>
+													<th>
+														Amount Per 100 g
+													</th>
+													<th>
+														Units
+													</th>
+													<th>
+														Last Modified
+													</th>
+												</tr>
+											</thead>
+											<tbody></tbody>
+										</table>
+									</div>
+								</div>
+							</div>
+							<div class="panel panel-default">
+								<div class="panel-heading" id="headingSix">
+									<h4 class="panel-title">
+										<a class="collapsed" data-parent="#accordion" data-toggle="collapse" href="#collapseSix">Other</a>
+									</h4>
+								</div>
+								<div class="panel-collapse collapse" id="collapseSix">
+									<div class="panel-body">
+										<table class="table table-striped table-bordered" id="tableOther">
+											<thead>
+												<tr>
+													<th>
+														Name
+													</th>
+													<th>
+														Amount Per 100 g
+													</th>
+													<th>
+														Units
+													</th>
+													<th>
+														Last Modified
+													</th>
+												</tr>
+											</thead>
+											<tbody></tbody>
+										</table>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button class="btn btn-default" data-dismiss="modal" type="button">Close</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>
