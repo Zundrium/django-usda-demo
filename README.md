@@ -28,20 +28,25 @@ A demo project using Django USDA
   ```
     pip install -r requirements.txt
   ```
+  
+6. Install Django USDA
+  ```
+    pip install git+https://github.com/zundrium/django-usda.git
+  ```
 
-6. [Download][1] the ASCII version of the 27th release of the USDA Nutrient Database.
+7. [Download][1] the ASCII version of the 27th release of the USDA Nutrient Database.
 
-7. Create the tables and import the zip file (This can take up to 10 minutes): 
+8. Create the tables and import the zip file (This can take up to 10 minutes): 
   ```
     python manage.py migrate
     python manage.py import_r27 <path_to_zipfile>
   ```
 
-8. Run the development server
+9. Run the development server
   ```
     python manage.py runserver
   ```
 
-9. Go to `http://localhost:8000/demo/` to see the demo. 
+10. Go to `http://localhost:8000/demo/` to see the demo. 
 
 [1]: http://www.ars.usda.gov/Services/docs.htm?docid=24912
