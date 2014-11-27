@@ -1,6 +1,5 @@
 Django==1.7.1
 argparse==1.2.1
 django-filter==0.8
-django-usda==0.1
 djangorestframework==2.4.4
 wsgiref==0.1.2
