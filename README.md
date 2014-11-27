@@ -1,5 +1,5 @@
 # Django USDA Demo
-A demo project using Django USDA
+A demo project using [Django USDA][2].
 
 ## Installation
 1. Create a new directory and open it:
@@ -50,3 +50,4 @@ A demo project using Django USDA
 10. Go to `http://localhost:8000/demo/` to see the demo. 
 
 [1]: http://www.ars.usda.gov/Services/docs.htm?docid=24912
+[2]: https://github.com/Zundrium/django-usda
